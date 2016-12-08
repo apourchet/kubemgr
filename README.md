@@ -14,3 +14,7 @@ applying them.
 ### Usage
     kubemgr apply deployment1
     kubemgr delete deployment1
+
+### TODO
+    Resources with href
+    Check dependency cycles

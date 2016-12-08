@@ -4,6 +4,8 @@ import (
 	"io"
 	"net/http"
 	"os"
+
+	"github.com/golang/glog"
 )
 
 func fileExists(filePath string) (bool, error) {
@@ -46,4 +48,10 @@ func mergeMaps(m1, m2 map[*Resource]bool) map[*Resource]bool {
 		m1[k] = true
 	}
 	return m1
+}
+
+func Fatal(err error) {
+	if err != nil {
+		glog.Fatalf("Error: %v", err)
+	}
 }

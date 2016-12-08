@@ -10,6 +10,7 @@ import (
 	"html/template"
 	"io/ioutil"
 	"os"
+	"path"
 
 	"github.com/golang/glog"
 )
@@ -19,36 +20,52 @@ type Inject struct {
 	Path string
 }
 
-type Injector interface {
+type PackagedInjects struct {
+	Package string
+	Injects []Inject
+}
+
+type InjectorInterface interface {
+	GetInjects(configPaths []string) error
 	Inject(filepath string) error
+	GetInjectedFilePath(filePath string) string
+	String() string
 }
 
-type InjectorImpl struct {
-	data map[string]interface{}
+type Injector struct {
+	Injects []Inject
+	Data    map[string]interface{}
 }
 
-func NewInjector(injects []*Inject) Injector {
-	injector := InjectorImpl{}
-	injector.data = make(map[string]interface{})
+func NewInjector() InjectorInterface {
+	i := Injector{}
+	i.Data = make(map[string]interface{})
+	return &i
+}
+
+func (injector *Injector) GetInjects(configPaths []string) error {
+	injects, err := fetchInjects(configPaths)
+	if err != nil {
+		return err
+	}
 	for _, i := range injects {
 		data, err := dataFromFile(i.Path)
 		if err != nil {
-			glog.Warningf("Failed to create injector with file '%s': %v", data, err)
-			continue
+			return err
 		}
 
 		innerData := make(map[string]interface{})
 		for k, v := range data {
-			injector.data[k] = v // Global
+			injector.Data[k] = v // Global
 			innerData[k] = v     // Namespaced
 		}
-		injector.data[i.Name] = innerData
+		injector.Data[i.Name] = innerData
 	}
-	return &injector
+	return nil
 }
 
 // Injects a file and outputs the new injected file's path
-func (i *InjectorImpl) Inject(filepath string) error {
+func (i *Injector) Inject(filepath string) error {
 	in, err := ioutil.ReadFile(filepath)
 	if err != nil {
 		glog.Errorf("Failed to inject file '%s': %v", err)
@@ -61,7 +78,7 @@ func (i *InjectorImpl) Inject(filepath string) error {
 		return err
 	}
 
-	outfname := fmt.Sprintf("%s.inj", filepath)
+	outfname := i.GetInjectedFilePath(filepath)
 	err = ioutil.WriteFile(outfname, out, 0644)
 	if err != nil {
 		glog.Errorf("Failed to write injected file '%s': %v", err)
@@ -72,14 +89,18 @@ func (i *InjectorImpl) Inject(filepath string) error {
 	return nil
 }
 
-func (i *InjectorImpl) doInject(content []byte) ([]byte, error) {
+func (i *Injector) GetInjectedFilePath(filePath string) string {
+	return filePath + ".inj"
+}
+
+func (i *Injector) doInject(content []byte) ([]byte, error) {
 	tname := fmt.Sprintf("%s", sha1.Sum(content))
 	tmpl, err := template.New(tname).Funcs(getFuncMap()).Parse(string(content))
 	if err != nil {
 		return nil, err
 	}
 	var buf bytes.Buffer
-	err = tmpl.Execute(&buf, i.data)
+	err = tmpl.Execute(&buf, i.Data)
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +109,36 @@ func (i *InjectorImpl) doInject(content []byte) ([]byte, error) {
 	return []byte(str), nil
 }
 
-// helper functions
+func (i *Injector) String() string {
+	content, _ := json.MarshalIndent(i, "", "   ")
+	return string(content)
+}
+
+func fetchInjects(configPaths []string) ([]Inject, error) {
+	injects := []Inject{}
+	for _, fpath := range configPaths {
+		configBytes, err := ioutil.ReadFile(fpath)
+		if err != nil {
+			return nil, err
+		}
+		pkg := PackagedInjects{}
+		err = json.Unmarshal(configBytes, &pkg)
+		if err != nil {
+			return nil, err
+		}
+		prefix := path.Dir(fpath)
+		for i := range pkg.Injects {
+			pkg.Injects[i].Name = pkg.Package + "-" + pkg.Injects[i].Name
+			pkg.Injects[i].Path = path.Join(prefix, pkg.Injects[i].Path)
+		}
+		injects = append(injects, pkg.Injects...)
+	}
+	return injects, nil
+}
+
+// *************************************
+// Helper functions for the templating *
+// *************************************
 func dataFromFile(filepath string) (map[string]interface{}, error) {
 	data := make(map[string]interface{})
 	configBytes, err := ioutil.ReadFile(filepath)
@@ -115,6 +165,10 @@ func base64Encode(s string) string {
 	return string(base64.StdEncoding.EncodeToString([]byte(s)))
 }
 
+func quote(s string) string {
+	return fmt.Sprintf("%q", s)
+}
+
 func loopOverInts(n float64) []int {
 	arr := make([]int, int(n))
 	for i := 0; i < int(n); i++ {
@@ -128,6 +182,7 @@ func getFuncMap() template.FuncMap {
 		"include": readFile,
 		"base64":  base64Encode,
 		"loop":    loopOverInts,
+		"quote":   quote,
 	}
 }
 
