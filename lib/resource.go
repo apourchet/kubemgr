@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/apourchet/kubemgr/lib/kubectl"
+	"github.com/golang/glog"
 )
 
 type PackagedResources struct {
@@ -113,6 +114,10 @@ func (r *ResourceManager) ApplyResources(pattern string) error {
 			if err != nil {
 				return err
 			}
+			err = kubectl.Check(path)
+			if err != nil {
+				return err
+			}
 			r.Applied[resourceName] = true
 		}
 	}
@@ -140,7 +145,7 @@ func (r *ResourceManager) DeleteResources(pattern string) error {
 			path := r.Injector.GetInjectedFilePath(resource.Path)
 			err := kubectl.Delete(path)
 			if err != nil {
-				return err
+				glog.Warningf("Error: %v", err)
 			}
 			r.Deleted[resourceName] = true
 		}
@@ -231,120 +236,3 @@ func prefixResource(prefix string, resource Resource) Resource {
 func resourceNameMatches(target string, resourceName string) (bool, error) {
 	return filepath.Match(target, resourceName)
 }
-
-// var (
-// 	prepared = map[*Resource]bool{}
-// 	applied  = map[*Resource]bool{}
-// 	deleted  = map[*Resource]bool{}
-// )
-
-// func NewResource() *Resource {
-// 	r := Resource{}
-// 	r.Deps = []*Resource{}
-// 	return &r
-// }
-//
-// func FromRawResource(raw *RawResource) *Resource {
-// 	res := NewResource()
-// 	res.Path = raw.Path
-// 	res.Href = raw.Href
-// 	res.Pull = raw.Pull
-// 	return res
-// }
-//
-// // Pulls the mgmt files according to the pull policy
-// func (r *Resource) prep(injector Injector) error {
-// 	if _, done := prepared[r]; done {
-// 		return nil
-// 	}
-//
-// 	for _, dep := range r.Deps {
-// 		err := dep.prep(injector)
-// 		if err != nil {
-// 			glog.Errorf("Failed preping resource '%s': %v", *r, err)
-// 			return err
-// 		}
-// 	}
-//
-// 	glog.V(3).Infof("Preping resource: %s", *r)
-//
-// 	path, err := pull(r.Path, r.Href, r.Pull)
-// 	if err != nil {
-// 		glog.Errorf("Failed preping resource '%s': %v", *r, err)
-// 		return err
-// 	}
-//
-// 	injector.Inject(path)
-// 	prepared[r] = true
-// 	glog.V(2).Infof("Successfully prepped resource: %s", *r)
-// 	return nil
-// }
-//
-// // Applies the resource to the kubernetes cluster
-// func (r *Resource) apply(injector Injector) error {
-// 	if _, done := applied[r]; done {
-// 		return nil
-// 	}
-//
-// 	err := r.prep(injector)
-// 	if err != nil {
-// 		glog.Errorf("Failed applying resource '%s': %v", *r, err)
-// 		return err
-// 	}
-// 	for _, dep := range r.Deps {
-// 		err := dep.apply(injector)
-// 		if err != nil {
-// 			glog.Errorf("Failed applying resource '%s': %v", *r, err)
-// 			return err
-// 		}
-// 	}
-//
-// 	glog.V(3).Infof("Applying Resource: %s", *r)
-// 	err = kubectl.Apply(r.Path + ".inj")
-// 	if err != nil {
-// 		glog.Errorf("Failed applying resource '%s': %v", *r, err)
-// 		return err
-// 	}
-//
-// 	err = r.check()
-// 	if err != nil {
-// 		glog.Errorf("Failed applying resource '%s': %v", *r, err)
-// 		return err
-// 	}
-// 	applied[r] = true
-// 	glog.V(2).Infof("Successfully applied resource: %s", *r)
-// 	return nil
-// }
-//
-// // Checks that this resource is ready to use by
-// // the ones that depend on it
-// func (r *Resource) check() error {
-// 	glog.V(3).Infof("Checking resource: %s", *r)
-//
-// 	err := kubectl.Check(r.Path + ".inj")
-// 	if err != nil {
-// 		glog.Errorf("Failed checking resource '%s': %v", err)
-// 		return err
-// 	}
-// 	return err
-// }
-//
-// func (r *Resource) delete() error {
-// 	if _, done := deleted[r]; done {
-// 		return nil
-// 	}
-//
-// 	glog.V(3).Infof("Deleting resource: %s", *r)
-// 	err := kubectl.Delete(r.Path + ".inj")
-// 	if err != nil {
-// 		glog.Errorf("Failed deleting resource: %s", *r)
-// 		return err
-// 	}
-//
-// 	glog.Infof("Successfully deleted resource: %s", *r)
-// 	return nil
-// }
-//
-// func (r Resource) String() string {
-// 	return r.Path
-// }

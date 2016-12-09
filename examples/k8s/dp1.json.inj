@@ -1,22 +1,35 @@
 {
-    "apiVersion": "v1", 
-    "kind": "Service", 
+    "apiVersion": "extensions/v1beta1", 
+    "kind": "Deployment", 
     "metadata": {
         "namespace": "incipit", 
         "name": "dp1"
     },
     "spec": {
-        "type": "ClusterIP", 
-        "ports": [
-            {
-                "protocol": "TCP", 
-                "targetPort": 10000,
-                "name": "http", 
-                "port": 80
+        "replicas": 2,
+        "template": {
+            "spec": {
+                "containers": [
+                    {
+                        "image": "nginx", 
+                        "imagePullPolicy": "Never", 
+                        "name": "box", 
+                        "ports": [ { "containerPort": 80 } ],
+                        "args": [],
+                        "env": []
+                    }
+                ]
+            }, 
+            "metadata": {
+                "labels": {
+                    "dp1": "true"
+                }
             }
-        ], 
+        }, 
         "selector": {
-            "auth": "true"
+            "matchLabels": {
+                "dp1": "true"
+            }
         }
     }
 }

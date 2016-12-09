@@ -1,14 +1,28 @@
 package kubectl
 
 import (
+	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os/exec"
+	"time"
 
 	"github.com/golang/glog"
 )
 
+type Resource struct {
+	Kind   string
+	Spec   map[string]interface{}
+	Status map[string]interface{}
+}
+
+const (
+	CheckRetries = 20
+	CheckSleep   = 500 * time.Millisecond
+)
+
 func Apply(filePath string) error {
-	glog.V(3).Infof("Kubectl applying '%s'", filePath)
+	glog.V(2).Infof("Kubectl applying '%s'", filePath)
 
 	content, err := ioutil.ReadFile(filePath)
 	if err != nil {
@@ -28,20 +42,42 @@ func Apply(filePath string) error {
 }
 
 func Check(filePath string) error {
-	glog.V(3).Infof("Kubectl checking '%s'", filePath)
+	glog.Infof("Kubectl checking '%s'", filePath)
 
-	out, err := exec.Command("kubectl", "get", "--no-headers=true", "-f", filePath).Output()
+	var err error
+	var out []byte
+	for i := 0; i < CheckRetries; i++ {
+		out, err = exec.Command("kubectl", "get", "-o", "json", "-f", filePath).Output()
+		if err != nil {
+			time.Sleep(CheckSleep)
+			continue
+		}
+
+		res := Resource{}
+		err = json.Unmarshal(out, &res)
+		if err != nil {
+			time.Sleep(CheckSleep)
+			continue
+		}
+
+		err = res.check()
+		if err != nil {
+			time.Sleep(CheckSleep)
+			continue
+		}
+	}
+
 	if err != nil {
 		glog.Errorf("Kubectl failed checking '%s'", filePath)
 		return err
 	}
 
-	glog.Infof("Kubectl successfully checked '%s' \n=> %s", filePath, string(out))
+	glog.Infof("Kubectl successfully checked '%s'", filePath)
 	return nil
 }
 
 func Delete(filePath string) error {
-	glog.V(3).Infof("Kubectl deleting '%s'", filePath)
+	glog.V(2).Infof("Kubectl deleting '%s'", filePath)
 
 	out, err := exec.Command("kubectl", "delete", "-f", filePath).Output()
 	if err != nil {
@@ -50,5 +86,25 @@ func Delete(filePath string) error {
 	}
 
 	glog.Infof("Kubectl successfully deleted '%s' \n=> %s", filePath, string(out))
+	return nil
+}
+
+func (r Resource) check() error {
+	switch r.Kind {
+	case "Service":
+		return nil
+	case "Deployment":
+		want := int(r.Spec["replicas"].(float64))
+		haveIf := r.Status["availableReplicas"]
+		have := 0
+		if haveIf != nil {
+			have = int(haveIf.(float64))
+		}
+		if want == have {
+			return nil
+		}
+		glog.Infof("Want(%d) Have(%d) => waiting and retrying", want, have)
+		return fmt.Errorf("Deployment not ready: want %s replicas, has %s.", want, have)
+	}
 	return nil
 }
