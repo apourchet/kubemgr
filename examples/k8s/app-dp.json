@@ -3,7 +3,7 @@
     "kind": "Deployment", 
     "metadata": {
         "namespace": {{quote $.NAMESPACE}}, 
-        "name": "dp1"
+        "name": "app"
     },
     "spec": {
         "replicas": 2,
@@ -22,13 +22,13 @@
             }, 
             "metadata": {
                 "labels": {
-                    "dp1": "true"
+                    "app": "true"
                 }
             }
         }, 
         "selector": {
             "matchLabels": {
-                "dp1": "true"
+                "app": "true"
             }
         }
     }

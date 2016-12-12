@@ -33,8 +33,7 @@ type InjectorInterface interface {
 }
 
 type Injector struct {
-	Injects []Inject
-	Data    map[string]interface{}
+	Data map[string]interface{}
 }
 
 func NewInjector() InjectorInterface {
@@ -97,11 +96,13 @@ func (i *Injector) doInject(content []byte) ([]byte, error) {
 	tname := fmt.Sprintf("%s", sha1.Sum(content))
 	tmpl, err := template.New(tname).Funcs(getFuncMap()).Parse(string(content))
 	if err != nil {
+		glog.Errorf("Templating failed: %v", err)
 		return nil, err
 	}
 	var buf bytes.Buffer
 	err = tmpl.Execute(&buf, i.Data)
 	if err != nil {
+		glog.Errorf("Templating failed: %v", err)
 		return nil, err
 	}
 	str := html.UnescapeString(buf.String())
@@ -128,7 +129,7 @@ func fetchInjects(configPaths []string) ([]Inject, error) {
 		}
 		prefix := path.Dir(fpath)
 		for i := range pkg.Injects {
-			pkg.Injects[i].Name = pkg.Package + "-" + pkg.Injects[i].Name
+			pkg.Injects[i].Name = pkg.Package + "_" + pkg.Injects[i].Name
 			pkg.Injects[i].Path = path.Join(prefix, pkg.Injects[i].Path)
 		}
 		injects = append(injects, pkg.Injects...)

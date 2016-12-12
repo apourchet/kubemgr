@@ -2,8 +2,8 @@
     "apiVersion": "v1", 
     "kind": "Service", 
     "metadata": {
-        "namespace": "incipit", 
-        "name": "svc1"
+        "namespace": "incipit",
+        "name": "app"
     },
     "spec": {
         "type": "ClusterIP", 
@@ -16,7 +16,7 @@
             }
         ], 
         "selector": {
-            "auth": "true"
+            "app": "true"
         }
     }
 }

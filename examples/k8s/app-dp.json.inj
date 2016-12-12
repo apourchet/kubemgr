@@ -2,8 +2,8 @@
     "apiVersion": "extensions/v1beta1", 
     "kind": "Deployment", 
     "metadata": {
-        "namespace": {{quote $.NAMESPACE}}, 
-        "name": "dp2"
+        "namespace": "incipit", 
+        "name": "app"
     },
     "spec": {
         "replicas": 2,
@@ -22,13 +22,13 @@
             }, 
             "metadata": {
                 "labels": {
-                    "dp1": "true"
+                    "app": "true"
                 }
             }
         }, 
         "selector": {
             "matchLabels": {
-                "dp1": "true"
+                "app": "true"
             }
         }
     }

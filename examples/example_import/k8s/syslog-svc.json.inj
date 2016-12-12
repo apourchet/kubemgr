@@ -3,7 +3,7 @@
     "kind": "Service", 
     "metadata": {
         "namespace": "incipit", 
-        "name": "svc2"
+        "name": "syslog"
     },
     "spec": {
         "type": "ClusterIP", 
@@ -16,7 +16,7 @@
             }
         ], 
         "selector": {
-            "auth": "true"
+            "syslog": "true"
         }
     }
 }

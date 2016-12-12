@@ -3,7 +3,7 @@
     "kind": "Deployment", 
     "metadata": {
         "namespace": "incipit", 
-        "name": "dp1"
+        "name": "db"
     },
     "spec": {
         "replicas": 2,
@@ -22,13 +22,13 @@
             }, 
             "metadata": {
                 "labels": {
-                    "dp1": "true"
+                    "db": "true"
                 }
             }
         }, 
         "selector": {
             "matchLabels": {
-                "dp1": "true"
+                "db": "true"
             }
         }
     }

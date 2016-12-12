@@ -3,7 +3,7 @@
     "kind": "Service", 
     "metadata": {
         "namespace": "incipit", 
-        "name": "dp2"
+        "name": "db"
     },
     "spec": {
         "type": "ClusterIP", 
@@ -16,7 +16,7 @@
             }
         ], 
         "selector": {
-            "auth": "true"
+            "db": "true"
         }
     }
 }

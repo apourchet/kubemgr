@@ -1,0 +1,35 @@
+{
+    "apiVersion": "extensions/v1beta1", 
+    "kind": "Deployment", 
+    "metadata": {
+        "namespace": {{quote $.NAMESPACE}}, 
+        "name": "db"
+    },
+    "spec": {
+        "replicas": 2,
+        "template": {
+            "spec": {
+                "containers": [
+                    {
+                        "image": "nginx", 
+                        "imagePullPolicy": "Never", 
+                        "name": "box", 
+                        "ports": [ { "containerPort": 80 } ],
+                        "args": [],
+                        "env": []
+                    }
+                ]
+            }, 
+            "metadata": {
+                "labels": {
+                    "db": "true"
+                }
+            }
+        }, 
+        "selector": {
+            "matchLabels": {
+                "db": "true"
+            }
+        }
+    }
+}
