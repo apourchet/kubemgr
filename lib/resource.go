@@ -171,7 +171,7 @@ func (r *ResourceManager) PrepResources(pattern string) error {
 func (r *ResourceManager) AssertValid() error {
 	for resourceName, res := range r.Resources {
 		for _, dep := range res.Deps {
-			if _, found := r.Resources[dep]; !found {
+			if len(r.findMatchingResources(dep)) <= 0 {
 				return fmt.Errorf("Dependency not found: %s => %s", resourceName, dep)
 			}
 		}
