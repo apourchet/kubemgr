@@ -7,16 +7,18 @@ import (
 )
 
 const (
-	ActionApply  = "apply"
-	ActionCheck  = "check"
-	ActionDelete = "delete"
+	ActionApply    = "apply"
+	ActionCheck    = "check"
+	ActionDelete   = "delete"
+	ActionRecreate = "recreate"
 )
 
 var (
 	Actions = map[string]interface{}{
-		ActionApply:  true,
-		ActionCheck:  true,
-		ActionDelete: true,
+		ActionApply:    true,
+		ActionCheck:    true,
+		ActionDelete:   true,
+		ActionRecreate: true,
 	}
 )
 

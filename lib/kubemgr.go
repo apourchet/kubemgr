@@ -66,6 +66,12 @@ func (k *KubeMgr) Do(action string, target string) {
 		err = resourceManager.CheckResources(target)
 	case ActionDelete:
 		err = resourceManager.DeleteResources(target)
+	case ActionRecreate:
+		err = resourceManager.DeleteResources(target)
+		if err != nil {
+			break
+		}
+		err = resourceManager.ApplyResources(target)
 	}
 
 	Fatal(err)
