@@ -21,6 +21,10 @@ const (
 	CheckSleep   = 500 * time.Millisecond
 )
 
+var (
+	Context = ""
+)
+
 func Apply(filePath string) error {
 	glog.V(2).Infof("Kubectl applying '%s'", filePath)
 
@@ -31,7 +35,8 @@ func Apply(filePath string) error {
 	}
 	glog.V(3).Infof("Kubectl applying content: \n%s", string(content))
 
-	out, err := exec.Command("kubectl", "apply", "-f", filePath).Output()
+	args := append([]string{"apply", "-f", filePath}, ContextArgs()...)
+	out, err := exec.Command("kubectl", args...).Output()
 	if err != nil {
 		glog.Errorf("Kubectl failed applying '%s': %v", filePath, err)
 		return err
@@ -47,7 +52,8 @@ func Check(filePath string) error {
 	var err error
 	var out []byte
 	for i := 0; i < CheckRetries; i++ {
-		out, err = exec.Command("kubectl", "get", "-o", "json", "-f", filePath).Output()
+		args := append([]string{"get", "-o", "json", "-f", filePath}, ContextArgs()...)
+		out, err = exec.Command("kubectl", args...).Output()
 		if err != nil {
 			time.Sleep(CheckSleep)
 			continue
@@ -79,7 +85,8 @@ func Check(filePath string) error {
 func Delete(filePath string) error {
 	glog.V(2).Infof("Kubectl deleting '%s'", filePath)
 
-	out, err := exec.Command("kubectl", "delete", "-f", filePath).Output()
+	args := append([]string{"delete", "-f", filePath}, ContextArgs()...)
+	out, err := exec.Command("kubectl", args...).Output()
 	if err != nil {
 		glog.Errorf("Kubectl failed deleting '%s'", filePath)
 		return err
@@ -107,4 +114,11 @@ func (r Resource) check() error {
 		return fmt.Errorf("Deployment not ready: want %s replicas, has %s.", want, have)
 	}
 	return nil
+}
+
+func ContextArgs() []string {
+	if Context == "" {
+		return []string{}
+	}
+	return []string{"--context", Context}
 }

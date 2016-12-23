@@ -23,14 +23,14 @@ func init() {
 	flag.Set("logtostderr", "true")
 
 	flag.StringVar(&fname, "f", "kubeconfig.json", "Configuration file to use")
-	flag.StringVar(&context, "C", "", "Context to execute the command in") // TODO use this
+	flag.StringVar(&context, "C", "", "Kubectl context")
 }
 
 func main() {
 	checkArgs()
 	parseArgs()
 
-	mgr := kubemgr.NewKubeMgr(fname)
+	mgr := kubemgr.NewKubeMgr(fname, context)
 	mgr.Do(action, target)
 }
 

@@ -1,14 +1,19 @@
 package kubemgr
 
-import "github.com/golang/glog"
+import (
+	"github.com/apourchet/kubemgr/lib/kubectl"
+	"github.com/golang/glog"
+)
 
 type KubeMgr struct {
 	filePath string
+	context  string
 }
 
-func NewKubeMgr(filePath string) *KubeMgr {
+func NewKubeMgr(filePath string, context string) *KubeMgr {
 	k := KubeMgr{}
 	k.filePath = filePath
+	kubectl.Context = context
 	return &k
 }
 
