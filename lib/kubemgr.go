@@ -1,19 +1,25 @@
 package kubemgr
 
 import (
+	"encoding/json"
+	"io/ioutil"
+
 	"github.com/apourchet/kubemgr/lib/kubectl"
 	"github.com/golang/glog"
 )
 
 type KubeMgr struct {
 	filePath string
-	context  string
 }
 
-func NewKubeMgr(filePath string, context string) *KubeMgr {
+type PackagedContext struct {
+	Package string
+	Context string
+}
+
+func NewKubeMgr(filePath string) *KubeMgr {
 	k := KubeMgr{}
 	k.filePath = filePath
-	kubectl.Context = context
 	return &k
 }
 
@@ -59,6 +65,11 @@ func (k *KubeMgr) Do(action string, target string) {
 	Fatal(err)
 	glog.V(1).Infof("Configuration is valid")
 
+	// Set the kubectl context
+	glog.V(3).Infof("Reading context from kubeconfig")
+	kubectl.Context, err = k.GetContext()
+	Fatal(err)
+
 	switch action {
 	case ActionApply:
 		err = resourceManager.ApplyResources(target)
@@ -76,4 +87,17 @@ func (k *KubeMgr) Do(action string, target string) {
 
 	Fatal(err)
 	glog.V(1).Infof("Done!")
+}
+
+func (k *KubeMgr) GetContext() (string, error) {
+	configBytes, err := ioutil.ReadFile(k.filePath)
+	if err != nil {
+		return "", err
+	}
+	pkg := PackagedContext{}
+	err = json.Unmarshal(configBytes, &pkg)
+	if err != nil {
+		return "", err
+	}
+	return pkg.Context, nil
 }

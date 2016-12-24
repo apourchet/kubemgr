@@ -2,6 +2,7 @@ package kubectl
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"os/exec"
@@ -25,6 +26,10 @@ var (
 	Context = ""
 )
 
+func init() {
+	flag.StringVar(&Context, "context", "", "Kubectl context")
+}
+
 func Apply(filePath string) error {
 	glog.V(2).Infof("Kubectl applying '%s'", filePath)
 
@@ -36,7 +41,8 @@ func Apply(filePath string) error {
 	glog.V(3).Infof("Kubectl applying content: \n%s", string(content))
 
 	args := append([]string{"apply", "-f", filePath}, ContextArgs()...)
-	out, err := exec.Command("kubectl", args...).Output()
+	cmd := exec.Command("kubectl", args...)
+	out, err := cmd.Output()
 	if err != nil {
 		glog.Errorf("Kubectl failed applying '%s': %v", filePath, err)
 		return err

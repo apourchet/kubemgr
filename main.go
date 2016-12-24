@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/apourchet/kubemgr/lib"
+	_ "github.com/apourchet/kubemgr/lib/kubectl"
 	"github.com/golang/glog"
 )
 
@@ -14,8 +15,7 @@ var (
 	action string
 	target string
 
-	fname   string
-	context string
+	fname string
 )
 
 func init() {
@@ -23,14 +23,13 @@ func init() {
 	flag.Set("logtostderr", "true")
 
 	flag.StringVar(&fname, "f", "kubeconfig.json", "Configuration file to use")
-	flag.StringVar(&context, "C", "", "Kubectl context")
 }
 
 func main() {
 	checkArgs()
 	parseArgs()
 
-	mgr := kubemgr.NewKubeMgr(fname, context)
+	mgr := kubemgr.NewKubeMgr(fname)
 	mgr.Do(action, target)
 }
 
