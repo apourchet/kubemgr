@@ -147,11 +147,7 @@ func dataFromFile(filepath string) (map[string]interface{}, error) {
 		return data, err
 	}
 	err = json.Unmarshal(configBytes, &data)
-	if err != nil {
-		return data, err
-	}
-	err = objectsToString(data)
-	return data, nil
+	return data, err
 }
 
 func readFile(fname string) (string, error) {
@@ -178,37 +174,22 @@ func loopOverInts(n float64) []int {
 	return arr
 }
 
-func getFuncMap() template.FuncMap {
-	return template.FuncMap{
-		"include": readFile,
-		"base64":  base64Encode,
-		"loop":    loopOverInts,
-		"quote":   quote,
+func stringify(i interface{}) string {
+	content, err := json.Marshal(i)
+	if err != nil {
+		return "Error marshalling object"
 	}
+	return string(content)
 }
 
-func objectsToString(m map[string]interface{}) error {
-	for k, v := range m {
-		cast, ok := v.(map[string]interface{})
-		if ok {
-			strBytes, err := json.Marshal(cast)
-			if err != nil {
-				return err
-			}
-			m[k] = string(strBytes)
-			continue
-		}
-		cast1, ok := v.([]interface{})
-		if ok {
-			strBytes, err := json.Marshal(cast1)
-			if err != nil {
-				return err
-			}
-			m[k] = string(strBytes)
-			continue
-		}
+func getFuncMap() template.FuncMap {
+	return template.FuncMap{
+		"include":   readFile,
+		"base64":    base64Encode,
+		"loop":      loopOverInts,
+		"quote":     quote,
+		"stringify": stringify,
 	}
-	return nil
 }
 
 func envOverride(m map[string]interface{}) {

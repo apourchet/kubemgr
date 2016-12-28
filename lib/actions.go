@@ -11,6 +11,7 @@ const (
 	ActionCheck    = "check"
 	ActionDelete   = "delete"
 	ActionRecreate = "recreate"
+	ActionInject   = "inject"
 )
 
 var (
@@ -19,6 +20,7 @@ var (
 		ActionCheck:    true,
 		ActionDelete:   true,
 		ActionRecreate: true,
+		ActionInject:   true,
 	}
 )
 

@@ -71,18 +71,25 @@ func (k *KubeMgr) Do(action string, target string) {
 	Fatal(err)
 
 	switch action {
+	case ActionInject:
+		err = resourceManager.PrepResources(target)
+		break
 	case ActionApply:
 		err = resourceManager.ApplyResources(target)
+		break
 	case ActionCheck:
 		err = resourceManager.CheckResources(target)
+		break
 	case ActionDelete:
 		err = resourceManager.DeleteResources(target)
+		break
 	case ActionRecreate:
 		err = resourceManager.DeleteResources(target)
 		if err != nil {
 			break
 		}
 		err = resourceManager.ApplyResources(target)
+		break
 	}
 
 	Fatal(err)
