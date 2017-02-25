@@ -45,6 +45,7 @@ func Apply(filePath string) error {
 	out, err := cmd.Output()
 	if err != nil {
 		glog.Errorf("Kubectl failed applying '%s': %v", filePath, err)
+		glog.Errorf("=> %s", string(out))
 		return err
 	}
 
@@ -116,8 +117,8 @@ func (r Resource) check() error {
 		if want == have {
 			return nil
 		}
-		glog.Infof("Want(%d) Have(%d) => waiting and retrying", want, have)
-		return fmt.Errorf("Deployment not ready: want %s replicas, has %s.", want, have)
+		glog.Infof("Want/have %d/%d => waiting and retrying", want, have)
+		return fmt.Errorf("Deployment not ready: want %d replicas, has %d.", want, have)
 	}
 	return nil
 }
