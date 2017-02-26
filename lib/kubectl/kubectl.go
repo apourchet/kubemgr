@@ -18,16 +18,17 @@ type Resource struct {
 }
 
 const (
-	CheckRetries = 20
-	CheckSleep   = 500 * time.Millisecond
+	CheckSleep = 2000 * time.Millisecond
 )
 
 var (
-	Context = ""
+	CheckRetries = 20
+	Context      = ""
 )
 
 func init() {
 	flag.StringVar(&Context, "context", "", "Kubectl context")
+	flag.IntVar(&CheckRetries, "retries", 20, "Number of times to retry the check")
 }
 
 func Apply(filePath string) error {
@@ -42,10 +43,10 @@ func Apply(filePath string) error {
 
 	args := append([]string{"apply", "-f", filePath}, ContextArgs()...)
 	cmd := exec.Command("kubectl", args...)
-	out, err := cmd.Output()
+	out, err := cmd.CombinedOutput()
 	if err != nil {
 		glog.Errorf("Kubectl failed applying '%s': %v", filePath, err)
-		glog.Errorf("=> %s", string(out))
+		glog.Errorf("=> %s", out)
 		return err
 	}
 
