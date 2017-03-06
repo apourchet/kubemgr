@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"strings"
 
 	"github.com/golang/glog"
 )
@@ -182,16 +183,22 @@ func stringify(i interface{}) string {
 	return string(content)
 }
 
+func trim(s string) string {
+	return strings.Trim(s, "\n ")
+}
+
 func getFuncMap() template.FuncMap {
 	return template.FuncMap{
 		"include":   readFile,
 		"base64":    base64Encode,
 		"loop":      loopOverInts,
 		"quote":     quote,
+		"trim":      trim,
 		"stringify": stringify,
 	}
 }
 
+// Unused for now
 func envOverride(m map[string]interface{}) {
 	for k, _ := range m {
 		if os.Getenv(k) != "" {
