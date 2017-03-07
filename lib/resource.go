@@ -9,6 +9,7 @@ import (
 
 	"github.com/apourchet/kubemgr/lib/kubectl"
 	"github.com/golang/glog"
+	"github.com/ogier/pflag"
 )
 
 type PackagedResources struct {
@@ -39,6 +40,14 @@ type ResourceManager struct {
 	Prepared  map[string]bool
 	Applied   map[string]bool
 	Deleted   map[string]bool
+}
+
+var (
+	SkipDeps bool
+)
+
+func init() {
+	pflag.BoolVar(&SkipDeps, "skip-deps", false, "Skip the dependencies")
 }
 
 func NewResourceManager() ResourceManagerInterface {
@@ -203,7 +212,7 @@ func (r *ResourceManager) findAllDependencies(pattern string) []string {
 		allResources[res] = true
 	}
 
-	for i := 0; i < len(resources); i++ {
+	for i := 0; i < len(resources) && !SkipDeps; i++ {
 		resource := r.Resources[resources[i]]
 		for _, dep := range resource.Deps {
 			if _, found := allResources[resources[i]]; !found {
@@ -212,6 +221,7 @@ func (r *ResourceManager) findAllDependencies(pattern string) []string {
 			}
 		}
 	}
+
 	for resourceName, _ := range r.Resources {
 		if match, err := resourceNameMatches(pattern, resourceName); err == nil && match {
 			allResources[resourceName] = true
