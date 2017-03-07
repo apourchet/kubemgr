@@ -2,13 +2,13 @@ package kubectl
 
 import (
 	"encoding/json"
-	"flag"
 	"fmt"
 	"io/ioutil"
 	"os/exec"
 	"time"
 
 	"github.com/golang/glog"
+	flag "github.com/ogier/pflag"
 )
 
 type Resource struct {
