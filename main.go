@@ -1,12 +1,12 @@
 package main
 
 import (
+	"flag"
 	"os"
 
 	"github.com/apourchet/kubemgr/lib"
 	_ "github.com/apourchet/kubemgr/lib/kubectl"
 	"github.com/golang/glog"
-	flag "github.com/ogier/pflag"
 )
 
 const ()

@@ -2,6 +2,7 @@ package kubemgr
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"path"
@@ -9,7 +10,6 @@ import (
 
 	"github.com/apourchet/kubemgr/lib/kubectl"
 	"github.com/golang/glog"
-	"github.com/ogier/pflag"
 )
 
 type PackagedResources struct {
@@ -47,7 +47,7 @@ var (
 )
 
 func init() {
-	pflag.BoolVar(&SkipDeps, "skip-deps", false, "Skip the dependencies")
+	flag.BoolVar(&SkipDeps, "skip-deps", false, "Skip the dependencies")
 }
 
 func NewResourceManager() ResourceManagerInterface {
