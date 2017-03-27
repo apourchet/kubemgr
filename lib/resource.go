@@ -90,8 +90,11 @@ func (r *ResourceManager) GetImportedResources(filePaths []string) error {
 		prefix := path.Dir(fpath)
 		for name, res := range pkg.Resources {
 			namespacedName := pkg.Package + "." + name
-			prefixedResource := prefixResource(prefix, res)
+			prefixedResource := prefixResource(pkg.Package, prefix, res)
 			r.Resources[namespacedName] = prefixedResource
+			if _, found := r.Resources[name]; !found {
+				r.Resources[name] = prefixedResource
+			}
 		}
 	}
 	return nil
@@ -235,12 +238,12 @@ func (r *ResourceManager) findAllDependencies(pattern string) []string {
 // ********************
 // * HELPER FUNCTIONS *
 // ********************
-func prefixResource(prefix string, resource Resource) Resource {
+func prefixResource(namespace, prefix string, resource Resource) Resource {
 	ret := Resource{}
 	ret.Path = path.Join(prefix, resource.Path)
 	ret.Deps = make([]string, len(resource.Deps))
 	for i := range resource.Deps {
-		ret.Deps[i] = prefix + resource.Deps[i]
+		ret.Deps[i] = namespace + "." + resource.Deps[i]
 	}
 	return ret
 }

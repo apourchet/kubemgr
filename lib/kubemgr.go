@@ -3,6 +3,8 @@ package kubemgr
 import (
 	"encoding/json"
 	"io/ioutil"
+	"os"
+	"path"
 
 	"github.com/apourchet/kubemgr/lib/kubectl"
 	"github.com/golang/glog"
@@ -24,12 +26,14 @@ func NewKubeMgr(filePath string) *KubeMgr {
 }
 
 func (k *KubeMgr) Do(action string, target string) {
+	os.Chdir(path.Dir(k.filePath))
+	filePath := path.Base(k.filePath)
 	importManager := NewImportManager()
 	resourceManager := NewResourceManager()
 	injector := NewInjector()
 
 	// Get and close the import loops
-	origImports, err := importManager.GetImports(k.filePath)
+	origImports, err := importManager.GetImports(filePath)
 	Fatal(err)
 	glog.V(3).Infof("Got first level imports: \n   %v", origImports)
 
@@ -38,7 +42,7 @@ func (k *KubeMgr) Do(action string, target string) {
 	glog.V(3).Infof("Got closed imports: \n   %v", allImports)
 
 	// Get resources from current config
-	err = resourceManager.FetchResources(k.filePath)
+	err = resourceManager.FetchResources(filePath)
 	Fatal(err)
 	glog.V(3).Infof("Got resources: \n%s", resourceManager.String())
 
@@ -52,7 +56,7 @@ func (k *KubeMgr) Do(action string, target string) {
 	Fatal(err)
 	glog.V(3).Infof("Got imported injects: \n%s", injector.String())
 
-	err = injector.GetInjects([]string{k.filePath})
+	err = injector.GetInjects([]string{filePath})
 	Fatal(err)
 	glog.V(3).Infof("Got injects: \n%s", injector.String())
 
@@ -97,7 +101,8 @@ func (k *KubeMgr) Do(action string, target string) {
 }
 
 func (k *KubeMgr) GetContext() (string, error) {
-	configBytes, err := ioutil.ReadFile(k.filePath)
+	filePath := path.Base(k.filePath)
+	configBytes, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		return "", err
 	}

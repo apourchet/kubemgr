@@ -68,20 +68,20 @@ func (injector *Injector) GetInjects(configPaths []string) error {
 func (i *Injector) Inject(filepath string) error {
 	in, err := ioutil.ReadFile(filepath)
 	if err != nil {
-		glog.Errorf("Failed to inject file '%s': %v", err)
+		glog.Errorf("Failed to inject file '%s': %v", filepath, err)
 		return err
 	}
 
 	out, err := i.doInject(in)
 	if err != nil {
-		glog.Errorf("Failed to inject file '%s': %v", err)
+		glog.Errorf("Failed to inject file '%s': %v", filepath, err)
 		return err
 	}
 
 	outfname := i.GetInjectedFilePath(filepath)
 	err = ioutil.WriteFile(outfname, out, 0644)
 	if err != nil {
-		glog.Errorf("Failed to write injected file '%s': %v", err)
+		glog.Errorf("Failed to write injected file '%s': %v", filepath, err)
 		return err
 	}
 
