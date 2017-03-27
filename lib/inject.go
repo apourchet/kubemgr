@@ -187,6 +187,14 @@ func trim(s string) string {
 	return strings.Trim(s, "\n ")
 }
 
+func getenv(key, def string) string {
+	val := os.Getenv(key)
+	if val == "" {
+		return def
+	}
+	return val
+}
+
 func getFuncMap() template.FuncMap {
 	return template.FuncMap{
 		"include":   readFile,
@@ -195,14 +203,6 @@ func getFuncMap() template.FuncMap {
 		"quote":     quote,
 		"trim":      trim,
 		"stringify": stringify,
-	}
-}
-
-// Unused for now
-func envOverride(m map[string]interface{}) {
-	for k, _ := range m {
-		if os.Getenv(k) != "" {
-			m[k] = os.Getenv(k)
-		}
+		"env":       getenv,
 	}
 }
