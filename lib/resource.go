@@ -113,6 +113,9 @@ func (r *ResourceManager) ApplyResources(pattern string) error {
 		if _, found := r.Applied[resourceName]; !found {
 			resource := r.Resources[resourceName]
 			for _, depName := range resource.Deps {
+				if SkipDeps {
+					continue
+				}
 				err = r.ApplyResources(depName)
 				if err != nil {
 					return err
@@ -212,21 +215,20 @@ func (r *ResourceManager) findAllDependencies(pattern string) []string {
 		allResources[res] = true
 	}
 
-	for i := 0; i < len(resources) && !SkipDeps; i++ {
+	if SkipDeps {
+		return mapKeys(allResources)
+	}
+
+	for i := 0; i < len(resources); i++ {
 		resource := r.Resources[resources[i]]
 		for _, dep := range resource.Deps {
-			if _, found := allResources[resources[i]]; !found {
+			if _, found := allResources[dep]; !found {
 				resources = append(resources, dep)
 				allResources[dep] = true
 			}
 		}
 	}
 
-	for resourceName, _ := range r.Resources {
-		if match, err := resourceNameMatches(pattern, resourceName); err == nil && match {
-			allResources[resourceName] = true
-		}
-	}
 	return mapKeys(allResources)
 }
 
